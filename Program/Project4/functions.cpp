@@ -33,8 +33,8 @@ void initializeRamdomSpinMatrix(int **matrix, int row, int column)
 }
 
 void metropolis(int **spins, int L, double temperature, double J,
-                double &E, double &M, mt19937 mt, uniform_int_distribution<int> intDist,
-                uniform_real_distribution<double> realDist)
+                double &E, double &M, mt19937 &mt, uniform_int_distribution<int> &intDist,
+                uniform_real_distribution<double> &realDist)
 {
     //double beta = 1./(1.381e-23*temperature);
     double exponentials[3];
@@ -54,7 +54,8 @@ void metropolis(int **spins, int L, double temperature, double J,
             E += (double) deltaE;
             M += (double) 2*spins[i][j];
         }else{
-            if(realDist(mt) <= exponentials[(int)((2*deltaE+8*J)/(8*J) - 1)]){
+            //if(realDist(mt) <= exponentials[(int)((2*deltaE+8*J)/(8*J) - 1)]){
+            if(realDist(mt) <= exp(-deltaE/temperature)){
                 spins[i][j] *= -1;
                 E += (double) deltaE;
                 M += (double) 2*spins[i][j];

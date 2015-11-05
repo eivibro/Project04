@@ -9,15 +9,16 @@ using namespace std;
 int main()
 {
     int L = 2;
+    int mcCycles = 100;
     //Random generator engine and distributions
     mt19937 mt(4724);
     uniform_int_distribution<int> intDist(0,1);
     uniform_real_distribution<double> realDist(0,1);
     double E,M;
     E = M = 0;
-    double startTemperature = 0.1;
-    double endTemperature = 30;
-    double tempStep = 1;
+    double startTemperature = 1.0;
+    double endTemperature = 20;
+    double tempStep = 0.1;
     double J = 1;
     int **spins;
     spins = (int **)matrix(L, L, sizeof(double));
@@ -26,18 +27,22 @@ int main()
     cout << "Initial magnetic momentum: " << M << endl;
     ofstream outfile;
     outfile.open("output.txt");
+    double averageE = 0;
     for(double t = startTemperature; t <= endTemperature; t+=tempStep){
-        for(int i = 0; i < 20; i++){
+        averageE = 0;
+        for(int i = 0; i < mcCycles; i++){
             metropolis(spins, L, t, J, E, M, mt, intDist, realDist);
+            averageE += E;
+
         }
         cout << "Temperature = " << t << endl;
-        cout << spins[0][0] << " " << spins[0][1] << endl;
-        cout << spins[1][0] << " " << spins[1][1] << endl;
-        output(t,E, outfile);
+        output(t,averageE/mcCycles, outfile);
 
     }
+    outfile.close();
     free_matrix((void **) spins);
-    return UnitTest::RunAllTests();
+    return 0;
+    //return UnitTest::RunAllTests();
 }
 
 
