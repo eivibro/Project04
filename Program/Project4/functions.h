@@ -13,7 +13,7 @@ void initializeRamdomSpinMatrix(int **matrix, int row, int column, double &M, in
 void metropolis(int **spinMatrix, int matrixDimension, double J, int spin_indices[], int &accepted_configurations, double &E, double &M,
                 mt19937 &mt, uniform_int_distribution<int> &intDist, uniform_real_distribution<double> &realDist, double exponentials[]);
 void output(double temperature, int mcCycles, int L, double average[], ofstream &outFile);
-void outputc(double temperature, int mcCycles, int L, double average[], int accepted_configurations, ofstream &outFile, double mAbs);
+void outputc(double temperature, int mcCycles, int L, double average[], int accepted_configurations, ofstream &outFile);
 //void spin_indices
 #endif // FUNCTIONS
 

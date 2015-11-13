@@ -2,7 +2,7 @@
 
 \usepackage[T1]{fontenc}	
 \usepackage[utf8]{inputenc}
-\usepackage[norsk]{babel}	
+%\usepackage[norsk]{babel}	
 \usepackage{graphicx}		
 \usepackage{enumerate}		
 \usepackage{mathtools}		
@@ -14,7 +14,7 @@
 %\usepackage{algorithm}		
 %\usepackage{hyperref}
 \usepackage{url}
-\usepackage{braket}			
+\usepackage{braket}		
 
 \setcounter{tocdepth}{3}
 
@@ -29,7 +29,7 @@
 
 \author{Eivind Brox}
 
-\title{Project 4}
+\title{Project 4: The Ising Model}
 \pagenumbering{roman}
 \setcounter{page}{0}		
 \date{\today}
@@ -38,7 +38,15 @@
 \thispagestyle{empty}
 \clearpage	
 
-\section{Abstract}
+\section*{Abstract}
+The topic of this project is the Metropolis algorithm used on the two dimensional Ising model of a ferromagnet. The Ising model consists in short words, of a system of dipoles with a preferred axis of magnetization interaction only with its neighboring dipoles. The algorithms gives a way of actually dealing with the system without knowing all the details about the microstates.
+
+The $2\times 2$ case is worked out analytically and used as a test case for the code. It turns out to be good agreement between the code and the analytical results for a number of Monte Carlo cycles approaching one million. The improvement in increasing the number of cycles further seems to be less significant.
+
+An estimate of the Courier temperature, which turns out to be in good agreement with that found analytically by Lars Onsager for a two dimensional system approaching an infinite size, is found . This was done by using a power law applicable for the case of the project. 
+
+
+
 
 
 
@@ -49,15 +57,22 @@
 \pagenumbering{arabic}		
 
 \section{Introduction}
-\clearpage
+The difficulty of dealing with systems of interacting particles is immense even for few particles, if all the possible states are to be outlined. In this project an alternative approach to a similar problem of the ferromagnet is investigated. This approach is highly doable with modern laptops, especially with parallel programming. Doing such calculation reveals things about the system which is hard to derive by only pen and paper. The most interesting feature parts of a system is often phase changes, which will be encountered here as well.
+
+The first section starts by introducing the problem at hand, as well as describing an analytical solution for a system which is doable by hand. This solution is used to test the code along with an analytical solution found for a case where our system size goes to infinity.
+
+The second part of this section describes the algorithm which is to be used, and comments a bit on the code.
+
+Next the results are presented for different simulations, before the conclusion is presented.    
+
 \section{Method}
 \subsection{The Ising Model and Thermodynamical Properties}
-For the Ising model in two dimensions, without the presence of a external magnetic field, and with a prefered axis of magnetization for the material, we have that the energy is
+For the Ising model in two dimensions, without the presence of a external magnetic field, and with a preferred axis of magnetization for the material, we have that the energy is
 \begin{gather}
 E = -J\sum\limits_{\braket{kl}}^N s_ks_l
 \label{eq:main_energy}
 \end{gather}
-where $N$ is the total number of spins and the symbol $\braket{kl}$ indicates that we only sum over the nearest neighbors. This is assumning that the magnetic dipoles only interacts with its nearest neighbors. We also have to be aware of the fact that we should not count the interactions between two spins twice. 
+where $N$ is the total number of spins and the symbol $\braket{kl}$ indicates that we only sum over the nearest neighbors. This is assuming that the magnetic dipoles only interacts with its nearest neighbors and neglects all long distance interactions. We also have to be aware of the fact that we should not count the interactions between two spins twice. 
 
 We have to consider what to do with the endpoints. The most natural choice is to use periodic boundary conditions. That is to say that when we consider an endpoint the neighbor or neighbors that do not really exist, are set to the value at the opposite endpoint.
 
@@ -93,7 +108,9 @@ The susceptibility is defined as
 \label{eq:main_suscept}
 \end{gather}
 
-\subsubsection{An Analytical Example}
+
+
+\subsubsection{An Analytical Example and Other Testing}
 When developing models for numerical calculations it is always a good idea to have an analytical solution to test the model against. Here we choose to consider the two dimensional rectangular system with four spins. We can find analytical solutions with relatively few calculations. 
 
 The energy in Eq. \eqref{eq:main_energy} reduces to 
@@ -176,42 +193,221 @@ We have that the mean magnetic moment is
 \begin{gather}
 \begin{aligned}
 \braket{|\cal M|} &= \frac{1}{Z}\sum\limits_{i}{|\cal M}_i|e^{-\beta E_i} = \frac{1}{Z}\sum\limits_{E}\Omega(E)|{\cal M}(E)|e^{-\beta E}\\
- &= 4e^{8\beta J} + 4\cdot2e^0 + 4\cdot2e^0 + 4e^{8\beta J} = 8(e^{8\beta J} +2)
+ &= \frac{1}{Z}(4e^{8\beta J} + 4\cdot2e^0 + 4\cdot2e^0 + 4e^{8\beta J}) = \frac{2(e^{8\beta J} +2)}{\cosh(8\beta J) + 3}
  \end{aligned}
 \end{gather}
 and the susceptibility, which we have from Eq. \eqref{eq:main_suscept} is
 \begin{gather}
 \begin{aligned}
-\chi &= \frac{1}{k_BT}\sum\limits_E \Omega(E){\cal M}^2e^{-\beta E}\\
- &= \frac{1}{k_BT}(4^2e^{8\beta J} + 4\cdot2^2 + 4\cdot(-2)^2 + (-4)^2e^{8\beta J}) = \frac{32}{k_BT}(e^{8\beta J}+1)
+\chi &= \frac{1}{k_BTZ}\sum\limits_E \Omega(E){\cal M}^2e^{-\beta E}\\
+ &= \frac{1}{k_BTZ}(4^2e^{8\beta J} + 4\cdot2^2 + 4\cdot(-2)^2 + (-4)^2e^{8\beta J})\\
+ &= \frac{32}{k_BT}\frac{e^{8\beta J}+1}{4(\cosh(8\beta J) + 3)} = \frac{8}{k_BT}\frac{e^{8\beta J}+1}{\cosh(8\beta J) + 3}
  \end{aligned}
 \end{gather}
 since $\braket{\cal M} = 0$.
 
-% We may also compare with Lars Onsager's analytical results for the two dimensional Ising model when the number of spins goes to infinity.
+These expressions are one of the ways the code is tested. Also, the thermodynamical properties may be characterized by power laws in the region of phase transition, and in particular we have
+\begin{gather}
+T_C(L)-T_C(L=\infty) = aL^{-1/\nu} 
+\label{eq:powerlaw}
+\end{gather} 
+where $T_C(L)$ is the critical temperature found for the given grid size $L$, and $T_C{L=\infty}$ is the temperature when the grid size goes to infinity. From Lars Onsager we have that the latter value is $T_C=2.269$ analytically, and we can compare what is found with that. We here use the exact result $\nu=1$. There are two unknowns in this equation so we need to do more than one simulation to actually be able to use it. In this project four simulations for this suiting this purpose was conducted. This gives a set of more equations than unknowns, which do not have a solution. We just set out to find the solution that fits best.
 
 \subsection{Monte Carlo Simulation}
-Determining the probabilities for all the different microstates in a system consisting of a fair amount of spins takes a lot of time. The number of microstates goes as $2^N$ where $N$ is the number of spins in the system. Analyzing all microstates of a system becomes computationally heavy, even for a fairly small number of spins. Just passing about 100 spins, makes the calculations impossible even with modern computers. 
+Determining the probabilities for all the different microstates in a system consisting of a fair amount of spins takes a lot of time. The number of microstates goes as $2^N$ where $N$ is the number of spins in the system. Analyzing all microstates of a system becomes computationally heavy, even for a fairly small number of spins.
 
 The idea to overcome this problem is to sample just a random selection of the microstates, and hope that these represent the system fairly well. We calculate the Boltzmann constant for each of these states and use them to calculate the thermodynamical properties of interest. The problem is of course that we will only sample a really small selection of the micro states, and will probably never encounter those that actually are important. 
 
-The strategy will thus be to utilize the Boltzmann constants to choose the subset of states to be randomly generated. An algorithm which does exactly this is the \textit{Metropolis algorithm}. The outline of the algorithm is as follows. Initialize the system of spins, either randomly or in some way that seems beneficial to e.g. the temperature. Select a spin at random and consider the change in energy when flipping the spin. If the energy decreases, then flip the spin. If the energy increases, then flip the spin with a probability of $e^{-(E_2-E_1)\beta}$. Move on to a new random spin and repeat the same procedure. Do this for so many times that each spin theoretically can have been considered for many times.
+The strategy will thus be to utilize the Boltzmann constants to choose the subset of states to be randomly generated. An algorithm which does exactly this is the \textit{Metropolis algorithm}. The outline of the algorithm is as follows. Initialize the system of spins, either randomly or in some way that seems beneficial to e.g. the temperature. Select a spin at random and consider the change in energy when flipping the spin. If the energy decreases, then flip the spin. If the energy increases, then flip the spin with a probability of $e^{-(E_2-E_1)\beta}$. Move on to a new random spin and repeat the same procedure. Do this for so many times that each spin theoretically can have been considered for many times. How many times will be analyzed in this project for the case of interest.
+
+Systematically we have
+\begin{enumerate}
+\item Choose an initial spin configuration and the number of Monte Carlo cycles to be performed.
+\item Choose a spin at random and try to flip it. If the flip results in a lower energy, then let it be flipped. If not then let it stay flipped if $e^{-(E_2-E_1)\beta}$ is larger than a random number from a uniform distribution between one and zero. Don't flip it if none of the conditions are satisfied.
+\item Calculate wanted expectation values.
+\item Repeat the processes 2 and 3 so that all spins have had a chance to be picked once to conclude one Monte Carlo cycle.
+\item Do this for the wanted number of Monte Carlo Cycles.
+\end{enumerate}
+
+For the details the reader is referred to the source code for which information is included in the Appendix. It can be mentioned that the code is parallelized and the exponentials are pre-calculated to make it faster.
+
+A general expectation value of a quantity $A$ is calculated as
+\begin{gather}
+\braket{A} = \frac{1}{\#\text{mc}}\sum\limits_{i=1}^{\#\text{mc}} A 
+\end{gather} 
+where $\# mc$ is the number of Monte Carlo cycles.
+
+\section{Results and Discussion}
+We start by comparing the results for the Metropolis calculations with the analytical results found for the $2\times 2$ spin lattice.
+
+Comparing results we use the following error
+\begin{gather}
+\text{Relative error} = \text{abs}\left(\frac{\text{exact}-\text{estimated}}{\text{exact}}\right)
+\end{gather}
+
+From this point the temperature is given as
+\begin{gather}
+T = \frac{k_BT_K}{J}
+\end{gather}
+where the subscript $K$ indicates temperature in Kelvin, and $k_B$ still is the Boltzmann constant.
+
+\subsection{The $2\times 2$ spin configuration}
+The relative error for the simulations compared to the analytically derived thermodynamical quantities are tabulated in table \ref{tab:relerr2x2}. The error decreases significantly up to the step from one million cycles to ten million cycles. Here the relative error for the susceptibility actually increases. It has been chosen to run one million cycles per temperature for the preceding simulations except for those considering the thermalization process, which will be considered in the next section.
+\begin{table}[!ht]
+\centering
+\begin{tabular}{c|c|c|c|c}
+& \multicolumn{4}{c}{Relative Error}\\
+\hline
+Monte Carlo Cycles & $\braket{E}/N$ & $\braket{|\cal M|}/N$ & $C_V/N$ & $\chi /N$\\
+\hline
+100 & 0.01836 & 0.00875& 8.77485& 0.99509\\
+1000 & 0.00120 & 0.00066& 0.98689& 0.02181\\
+10000 & 0.00051 & 0.00049& 0.25305& 0.56362\\
+100000 & 3.90e-05& 0.00010& 0.01946& 0.00673\\
+1000000 & 3.05e-06 &1.63e-05 & 0.00240 & 0.00016\\
+10000000 & 2.65e-06&1.64e-06& 0.00154 & 0.00045
+\end{tabular}
+\caption{Here the different thermodynamical properties calculated with the metropolis algorithm are compared with those found analytically for the $2\times 2$ spin configuration, at $T=1$. The number of spins, $N=4$, for this case. The initial spin configuration was randomly oriented spins.}
+\label{tab:relerr2x2}
+\end{table}
+
+\begin{figure}[!ht]
+\includegraphics[width = 1\textwidth]{energy.eps}
+\includegraphics[width = 1\textwidth]{magnetization.eps}
+\end{figure}
+
+\begin{figure}[!ht]
+\includegraphics[width = 0.9\textwidth]{heat_capacity.eps}
+\includegraphics[width = 0.9\textwidth]{susceptibility.eps}
+\end{figure}
+\clearpage
+
+\subsection{The Thermalization Process}
+Here the number of Monte Carlo cycles that are needed before equilibrium is reached is investigated. This number is typically called the thermalization time. A $20\times 20$ spin configuration is considered, and both a all spins directed in one direction and random chosen directions are considered as initial conditions. Only the expectation value for the absolute value of the magnetization and the expectation value for the energy are considered. 
+
+The thermalization process is of importance because we are interested in the expectation values at thermal equilibrium, and we thus should not start to sample data before equilibrium is reached. Else we would end up with results that may be shifted in one direction. This effect will of course be smaller for increasing numbers of Monte Carlo cycles, but the computational cost increases accordingly. Thus it is smart to just throw away the bad values to avoid the shift, and save computational time.
+
+\begin{figure}[!ht]
+\includegraphics[width = 0.9\textwidth]{taskC_T1En.eps}
+\caption{The mean value of the energy per spin ( as a function of Monte Carlo Cycles, for both ordered and random initial configurations. The temperature is $T=1.0$}
+\label{fig:EnT1}
+\end{figure}
+
+\begin{figure}[!ht]
+\includegraphics[width = 0.9\textwidth]{taskC_T1Mag.eps}
+\caption{The mean value of the mean of the absolute value of the magnetization as a function of Monte Carlo Cycles, for both ordered and random initial configurations. The temperature is $T=1.0$}
+\label{fig:magT1}
+\end{figure} 
+
+In Figure \ref{fig:EnT1} and \ref{fig:magT1} we see the thermalization process of mean energy and mean absolute magnetization for a temperature $T=1.0$. The thermalization is very fast for the ordered start configuration. This seems logical as the temperature is low, and a more ordered configuration than for larger temperatures will occur. To start with an ordered configuration is thus a good idea if smaller temperatures are considered.
+The same process is showed in Figure \ref{fig:magEnT2} for a larger temperature of $T=2.4$. The first observation is that the thermalization process is more uneven, with much more jumping back and forth. This is a natural consequence of the system's strive to reach a higher entropy than in the lower temperature case. There are a larger number of probable microstates and thus more fluctuations are to be expected due to a larger number of accepted flips.
+
+The thermalization process is really about minimizing Helmholtz' free energy, $F=U-TS$, where $U$ is the energy of the system, $T$ is the temperature and $S$ is the entropy. This minimization is basically the battle between two physical principles, namely the system's drive towards maximal entropy on one side, and the drive towards minimal energy on the other.
+
+We see that for $T=2.4$ equilibrium is reached at about 6000 Monte Carlo cycles for both the energy and the magnetization. The thermalization seems to be slightly faster for random initial configurations.
+
+Comparing the two plots in Figure \ref{fig:aflips} showing the number of accepted flips for each Monte Carlo cycle, it is clear that there are a lot more flips accepted at higher temperatures. This was expected for the same reason as why the thermalization process was smoother for the lower temperature than the higher.
+
+For the rest of the calculations a random initial spin configuration was used whenever the temperature was not 1.0. This is especially good for parallel computations when the parallelization is done over different ranges of temperature, which will be conducted shortly. Also, the first 10000 cycles was discarded and measurements was only made after these were ran through. More fancy methods of analyzing these matters could have been used, but most of these slow down the program considerably even if less calculations have to be conducted. A more close post analysis of the thermalization process could also have been done, but this is also time consuming. 
+ 
+
+\begin{figure}[!ht]
+\includegraphics[width = 0.9\textwidth]{taskC_T2En.eps}
+\includegraphics[width = 0.9\textwidth]{taskC_T2Mag.eps}
+\caption{The mean value of the energy per spin (top) and the mean of the absolute value of the magnetization (bottom), as a function of Monte Carlo Cycles, for both ordered and random initial configurations. The temperature is $T=2.4$}
+\label{fig:magEnT2}
+\end{figure}
+
+\begin{figure}[!ht]
+\includegraphics[width = 0.9\textwidth]{taskC_AT1.eps}
+\includegraphics[width = 0.9\textwidth]{taskC_AT2.eps}
+\caption{Number of accepted flips as a function of Monte Carlo cycles for $T=1.0$ (top) and $T=2.5$ (bottom).}
+\label{fig:aflips}
+\end{figure}
 
 
 
 \clearpage
-\section{Results}
+
+\subsection{Probability of Measuring Different Energies}
+Measuring the energy at the end of each Monte Carlo cycle, and plotting the results in histograms normalized such that the sum of the areas of the rectangles are one, results in Figure \ref{fig:histT1} and \ref{fig:histT2}. Calculating the variance of the energy with tools included in the \textit{pylab} package of \textit{python} gives $\sigma_E^2= 9.3511$ for $T = 1.0$ and $\sigma_E^2 = 3233.838$ for $T = 2.4$. Taking the last result of the heat capacity for both datasets and multiplying with the number of spins and the temperature squared gives an agreement between the variance and the heat capacity corresponding to the number of digits given for the variance. This is very good but not unexpected since the data is essentially the same.
+\begin{figure}[!ht]
+\includegraphics[width = 0.9\textwidth]{probabilityT1.eps}
+\caption{The probability distribution for the energy at $T=1.0$.}
+\label{fig:histT1}
+\end{figure}
+
+\begin{figure}[!ht]
+\includegraphics[width = 0.9\textwidth]{probabilityT2.eps}
+\caption{The probability distribution for the energy at $T=2.4$.}
+\label{fig:histT2}
+\end{figure}
 
 
-\clearpage
-\section{Discussion}
+\subsection{Larger Grids and the Critical Temperature}
+In Figure \ref{fig:enmag} and \ref{fig:heatsus} the considered expectation values are plotted as a function of temperature for different grid sizes. When the grid size increases a phase transition becomes more and more visible. This is especially apparent for the heat capacity and susceptibility plotted in Figure \ref{fig:heatsus}. Here the values changes much with small changes of the temperature in the region around the critical temperature which is approximated below. 
+\begin{figure}
+\includegraphics[width = 1\textwidth]{energyAll.eps}
+\includegraphics[width = 1\textwidth]{magnetizationAll.eps}
+\caption{Mean energy (top) and mean absolute magnetization (bottom) for simulations at different temperatures and grid sizes.}
+\label{fig:enmag}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width = 1\textwidth]{heat_capacityAll.eps}
+\includegraphics[width = 1\textwidth]{susceptibilityAll.eps}
+\caption{Mean heat capacity (top) and mean susceptibility (bottom) for simulations at different temperatures and grid sizes. The susceptibility is calculated as $\xi = (\braket{{\cal M}^2} - \braket{|\cal M|}^2)/k_BT$}
+\label{fig:heatsus}
+\end{figure}
+
+Using the values presented in Table \ref{tab:gridsizes} and Eq. \ref{eq:powerlaw} we find a critical temperature of $T_{C,S}=2.263$, using the built in equation solver of \textit{Matlab}. The subscript $S$ stands for simulated. Comparing with the Lars Onsager's value $T_C=2.269$ there is an relative error of 0.0026, which is a rather good agreement. This was for a step in temperature of $\Delta T=0.0267$, which is a bit large. More accurate values might have been found increasing the density of temperature point around the region of phase transition.
+\begin{table}[!ht]
+\centering
+\begin{tabular}{c|c}
+$L$ & $T_c$\\
+\hline
+20 & 2.373\\
+40 & 2.32\\
+60 & 2.293\\
+80 & 2.293
+\end{tabular}
+\caption{Critical temperatures found from the simulations, at different grid sizes. The temperatures was simply hand selected from the data sets where the susceptibility was at it's greatest. All simulations were done with $10^6$ Monte Carlo Cycles.}
+\label{tab:gridsizes}
+\end{table}
+
+
+
 
 \clearpage
 \section{Conclusion}
+The main findings of this project is that the Metropolis algorithm is a smart way to get information about a system of interacting parts without having to resolve all the details. The algorithm is relatively efficient and easy to parallelize, which makes it a good candidate for calculations made by large clusters of machines for a large variety of problems, not only physical ones.  
+
+Using power laws an approximation of the Courier temperature which was in good agreement to the value Lars Onsager found analytically for systems of infinite size. This was of course done in the phase transition region which was easy to spot, especially for magnetization and susceptibility. It is very interesting to see how such an simple algorithm may lead to useful results for physical systems which themselves are modeled rather crudely.
+
+\subsection{Further Work and Comments}
+I would really have liked to have time to do simulations with a smaller step in temperature for the calculations were we were considering the phase transition and the critical temperature. I realized that there were some faults in my results when increasing the grid size, after I had prioritized getting parallelization to work, thinking that was what a would find difficult. Once again I developed a code where a lot of commenting and uncommenting lines was the part of getting the results. This really isn't a problem when working on a code that you have fresh in your mind and consists of few lines. I just hope it will not be too much of an hassle to dig up again if I want to fresh up on what was done.
+
+This was an interesting project, but I felt I could have learned more about the physics behind the system. Maybe some extra leading questions could have been asked in the project text. What i did learn a lot about was technical details regarding computational efficiency, which was great.
+
+Another thing I would like to add was an argumentation for the Metropolis algorithm itself, including derivations and considerations around Markov chains and Monte Carlo integration. I would probably put it in the appendix, as I believe the project already consists of enough details.
 \appendix
+\section{Source Code}
+Source code can be found at \url{https://github.com/eivibro/Project04}
+\subsection{main.cpp}
+\lstinputlisting{../Program/Project4/main.cpp}
+\subsection{functions.cpp}
+\lstinputlisting{../Program/Project4/functions.cpp}
+\subsection{functions.h}
+\lstinputlisting{../Program/Project4/functions.h}
+
+\lstset{language = Python, commentstyle=\textcolor[rgb]{0.00,0.50,0.00}, keepspaces=true, columns=flexible, basicstyle=\footnotesize, keywordstyle=\color{blue}, showstringspaces=false, inputencoding=ansinew}
+\subsection{plotting.py}
+The plotting programs have been altered considerably during the process of obtaining the results. 
+\lstinputlisting{../Program/build-Project4-Desktop-Release/plotting.py}
+\subsection{plotting\_task\_c.py}
+\lstinputlisting{../Program/build-Project4-Desktop-Release/plotting_task_c.py}
 
 
-% \lstinputlisting{filsti_til_din_programkodefil}
 
 
 \end{document}

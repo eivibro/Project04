@@ -37,6 +37,7 @@ void initializeRamdomSpinMatrix(int **spins, int row, int column, double &M, int
     E *= J;
 }
 
+//Function running one Monte Carlo cycle
 void metropolis(int **spins, int L, double J, int spin_indices[], int &accepted_configurations,
                 double &E, double &M, mt19937 &mt, uniform_int_distribution<int> &intDist,
                 uniform_real_distribution<double> &realDist, double exponentials[])
@@ -47,8 +48,6 @@ void metropolis(int **spins, int L, double J, int spin_indices[], int &accepted_
     for(int k = 0; k < L*L; k++){
         i = intDist(mt);
         j = intDist(mt);
-//        deltaE = 2*J*spins[i][j]*(spins[i][(j+L-1)%L]+spins[i][(j+L+1)%L]
-//                +spins[(i+L-1)%L][j]+spins[(i+L+1)%L][j]);
         deltaE = 2*J*spins[i][j]*(spins[i][spin_indices[j]]+spins[i][spin_indices[j+2]]
                 +spins[spin_indices[i]][j]+spins[spin_indices[i+2]][j]);
         if (deltaE < 0 || realDist(mt) <= exponentials[(int)deltaE]){
@@ -60,6 +59,7 @@ void metropolis(int **spins, int L, double J, int spin_indices[], int &accepted_
     }
 }
 
+//Methods to write to file
 void output(double temperature, int mcCycles, int L, double average[], ofstream &outFile)
 {
     double inverse_number_spins = 1./(L*L);
@@ -79,7 +79,7 @@ void output(double temperature, int mcCycles, int L, double average[], ofstream 
  }
 
 void outputc(double temperature, int mcCycles, int L,
-             double average[], int accepted_configurations, ofstream &outFile, double mAbs)
+             double average[], int accepted_configurations, ofstream &outFile)
 {
     double inverse_number_spins = 1./(L*L);
     double ExpEnergy = average[0]/mcCycles;
@@ -89,7 +89,7 @@ void outputc(double temperature, int mcCycles, int L,
     double ExpMagnetization = average[4]/mcCycles;
 
     double heatCapacity = (ExpEnergy2-ExpEnergy*ExpEnergy)/(temperature*temperature);
-    double suceptibility = (ExpMagnetization2-ExpMagnetization*ExpMagnetization)/temperature;
+    double suceptibility = (ExpMagnetization2-ExpAbsMagnetization*ExpAbsMagnetization)/temperature;
     double suceptibilityAbs = (ExpMagnetization2-ExpAbsMagnetization*ExpAbsMagnetization)/temperature;
     outFile << setw(15) << setprecision(8) << mcCycles;
     outFile << setw(15) << setprecision(8) << ExpEnergy*inverse_number_spins;
